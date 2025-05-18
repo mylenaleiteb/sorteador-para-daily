@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Sorteador de Nomes por Equipes</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary-color: #6b7280;
+            --secondary-hover: #4b5563;
+            --background: #ffffff;
+            --card-background: #f9fafb;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+                "Helvetica Neue", sans-serif;
+            background-color: var(--background);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .title {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nome-sorteado {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .placeholder {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .nomes-disponiveis {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .badge {
+            background-color: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .alerta {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #b91c1c;
+        }
+
+        .lista-historico {
+            list-style-position: inside;
+            width: 100%;
+        }
+
+        .lista-historico li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lista-historico li:last-child {
+            border-bottom: none;
+        }
+
+        .botao {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            color: white;
+        }
+
+        .botao:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .botao-secundario {
+            background-color: var(--secondary-color);
+        }
+
+        .botao-secundario:hover:not(:disabled) {
+            background-color: var(--secondary-hover);
+        }
+
+        .botao-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .botao-outline:hover {
+            background-color: var(--card-background);
+        }
+
+        /* Estilos para seleção de equipes */
+        .selecao-equipe {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .selecao-equipe h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .equipes-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 640px) {
+            .equipes-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .equipe-card {
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 140px; /* Altura fixa para os cards */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .equipe-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .equipe-selecionada {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .equipe-cor {
+            padding: 2rem 1rem;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.25rem;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .equipe-info {
+            padding: 0.5rem;
+            background-color: white;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Cores específicas */
+        .bg-red-100 {
+            background-color: #fee2e2;
+        }
+
+        .border-red-200 {
+            border-color: #fecaca;
+        }
+
+        .text-red-800 {
+            color: #991b1b;
+        }
+
+        .bg-blue-100 {
+            background-color: #dbeafe;
+        }
+
+        .border-blue-200 {
+            border-color: #bfdbfe;
+        }
+
+        .text-blue-800 {
+            color: #1e40af;
+        }
+
+        .bg-green-100 {
+            background-color: #d1fae5;
+        }
+
+        .border-green-200 {
+            border-color: #a7f3d0;
+        }
+
+        .text-green-800 {
+            color: #065f46;
+        }
+
+        .bg-red-500 {
+            background-color: #ef4444;
+        }
+
+        .hover-bg-red-600:hover {
+            background-color: #dc2626;
+        }
+
+        .bg-blue-500 {
+            background-color: #3b82f6;
+        }
+
+        .hover-bg-blue-600:hover {
+            background-color: #2563eb;
+        }
+
+        .bg-green-500 {
+            background-color: #10b981;
+        }
+
+        .hover-bg-green-600:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1 class="title">📎 Sorteador de Nomes por Equipes 📎</h1>
+        
+        <div id="selecao-equipe" class="selecao-equipe">
+            <h2>Selecione uma equipe para o sorteio:</h2>
+            
+            <div class="equipes-grid" id="equipes-grid">
+                <!-- As equipes serão inseridas aqui pelo JavaScript -->
+            </div>
+            
+            <button id="btn-iniciar" class="botao bg-blue-500 hover-bg-blue-600">
+                Iniciar Sorteio
+            </button>
+        </div>
+        
+        <div id="sorteio-container" class="grid" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 id="titulo-equipe">Sorteio</h2>
+                    <p id="status-sorteio">Carregando...</p>
+                </div>
+                <div class="card-content">
+                    <div id="nome-sorteado" class="placeholder">Clique em sortear</div>
+                    
+                    <div id="nomes-disponiveis" class="nomes-disponiveis">
+                        <!-- Nomes serão inseridos aqui pelo JavaScript -->
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="btn-sortear" class="botao bg-blue-500 hover-bg-blue-600">Sortear</button>
+                    <button id="btn-resetar" class="botao botao-secundario">Resetar</button>
+                    <button id="btn-trocar-equipe" class="botao botao-outline">Trocar Equipe</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Histórico de Sorteios</h2>
+                    <p id="status-historico">Nenhum sorteio realizado</p>
+                </div>
+                <div class="card-content">
+                    <ol id="lista-historico" class="lista-historico">
+                        <!-- Histórico será inserido aqui pelo JavaScript -->
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Dados das equipes
+        const equipesNomes = {
+            equipe1: ["Isao", "Guilherme", "Vinicius"],
+            equipe2: ["Colocar nomes"],
+            equipe3: ["Carlos", "Danilo", "Fabricio", "Felipe", "Gabriela", "Gilberto", "Guilherme", "Jessica", "Lucas", "Marcelo Mariano", "Mylena", 
+                      "Pedro", "Wellington", "Yago"]
+        };
+        
+        // Nomes das equipes para exibição
+        const nomesEquipes = {
+            equipe1: "Analytics",
+            equipe2: "Integração",
+            equipe3: "Fábrica"
+        };
+        
+        // Cores para as equipes
+        const coresEquipes = {
+            equipe1: "bg-red-100 border-red-200 text-red-800",
+            equipe2: "bg-blue-100 border-blue-200 text-blue-800",
+            equipe3: "bg-green-100 border-green-200 text-green-800"
+        };
+        
+        // Cores para os botões das equipes
+        const coresBotoesEquipes = {
+            equipe1: "bg-red-500 hover-bg-red-600",
+            equipe2: "bg-blue-500 hover-bg-blue-600",
+            equipe3: "bg-green-500 hover-bg-green-600"
+        };
+        
+        // Elementos do DOM
+        const selecaoEquipe = document.getElementById('selecao-equipe');
+        const equipesGrid = document.getElementById('equipes-grid');
+        const btnIniciar = document.getElementById('btn-iniciar');
+        const sorteioContainer = document.getElementById('sorteio-container');
+        const tituloEquipe = document.getElementById('titulo-equipe');
+        const statusSorteio = document.getElementById('status-sorteio');
+        const nomeSorteado = document.getElementById('nome-sorteado');
+        const nomesDisponiveis = document.getElementById('nomes-disponiveis');
+        const btnSortear = document.getElementById('btn-sortear');
+        const btnResetar = document.getElementById('btn-resetar');
+        const btnTrocarEquipe = document.getElementById('btn-trocar-equipe');
+        const statusHistorico = document.getElementById('status-historico');
+        const listaHistorico = document.getElementById('lista-historico');
+        
+        // Estado do sorteador
+        let equipeAtual = 'equipe1';
+        let nomes = [];
+        let historico = [];
+        let animando = false;
+        
+        // Inicializa o sorteador
+        function inicializar() {
+            // Renderiza as opções de equipes
+            renderizarEquipes();
+            
+            // Adiciona event listeners
+            btnIniciar.addEventListener('click', iniciarSorteio);
+            btnSortear.addEventListener('click', sortear);
+            btnResetar.addEventListener('click', resetarSorteio);
+            btnTrocarEquipe.addEventListener('click', trocarEquipe);
+        }
+        
+        // Renderiza as opções de equipes
+        function renderizarEquipes() {
+            equipesGrid.innerHTML = '';
+            
+            Object.keys(nomesEquipes).forEach(key => {
+                const equipeCard = document.createElement('div');
+                equipeCard.className = `equipe-card ${key === equipeAtual ? 'equipe-selecionada' : ''}`;
+                equipeCard.onclick = () => selecionarEquipe(key);
+                
+                const equipeCor = document.createElement('div');
+                equipeCor.className = `equipe-cor ${coresEquipes[key]}`;
+                equipeCor.textContent = nomesEquipes[key];
+                
+                const equipeInfo = document.createElement('div');
+                equipeInfo.className = 'equipe-info';
+                
+                equipeCard.appendChild(equipeCor);
+                equipeCard.appendChild(equipeInfo);
+                equipesGrid.appendChild(equipeCard);
+            });
+            
+            // Atualiza o texto do botão iniciar
+            btnIniciar.textContent = `Iniciar Sorteio com ${nomesEquipes[equipeAtual]}`;
+            btnIniciar.className = `botao ${coresBotoesEquipes[equipeAtual]}`;
+        }
+        
+        // Seleciona uma equipe
+        function selecionarEquipe(equipe) {
+            equipeAtual = equipe;
+            
+            // Atualiza a seleção visual
+            document.querySelectorAll('.equipe-card').forEach(card => {
+                card.classList.remove('equipe-selecionada');
+            });
+            
+            document.querySelectorAll('.equipe-card')[Object.keys(nomesEquipes).indexOf(equipe)].classList.add('equipe-selecionada');
+            
+            // Atualiza o texto do botão iniciar
+            btnIniciar.textContent = `Iniciar Sorteio com ${nomesEquipes[equipeAtual]}`;
+            btnIniciar.className = `botao ${coresBotoesEquipes[equipeAtual]}`;
+        }
+        
+        // Inicia o sorteio com a equipe selecionada
+        function iniciarSorteio() {
+            selecaoEquipe.style.display = 'none';
+            sorteioContainer.style.display = 'grid';
+            
+            resetarSorteio();
+            atualizarInterface();
+        }
+        
+        // Troca de equipe
+        function trocarEquipe() {
+            selecaoEquipe.style.display = 'block';
+            sorteioContainer.style.display = 'none';
+            
+            historico = [];
+            nomeSorteado.className = 'placeholder';
+            nomeSorteado.textContent = 'Clique em sortear';
+        }
+        
+        // Função para sortear um nome
+        function sortear() {
+            if (nomes.length === 0) {
+                resetarSorteio();
+                return;
+            }
+            
+            // Inicia a animação
+            animando = true;
+            nomeSorteado.className = 'placeholder';
+            nomeSorteado.textContent = 'Sorteando...';
+            btnSortear.disabled = true;
+            
+            // Simula um sorteio com animação
+            let contador = 0;
+            const intervalo = setInterval(() => {
+                const indiceAleatorio = Math.floor(Math.random() * nomes.length);
+                nomeSorteado.textContent = nomes[indiceAleatorio];
+                contador++;
+                
+                if (contador > 3) {
+                    clearInterval(intervalo);
+                    finalizarSorteio();
+                }
+            }, 25);
+        }
+        
+        // Finaliza o sorteio após a animação
+        function finalizarSorteio() {
+            const indiceAleatorio = Math.floor(Math.random() * nomes.length);
+            const nome = nomes[indiceAleatorio];
+            
+            // Remove o nome sorteado da lista
+            nomes.splice(indiceAleatorio, 1);
+            
+            // Atualiza o nome sorteado
+            nomeSorteado.className = 'nome-sorteado';
+            nomeSorteado.textContent = nome;
+            
+            // Adiciona ao histórico
+            historico.push(nome);
+            
+            // Finaliza a animação
+            animando = false;
+            
+            // Atualiza a interface
+            atualizarInterface();
+        }
+        
+        // Função para resetar o sorteio
+        function resetarSorteio() {
+            nomes = [...equipesNomes[equipeAtual]];
+            historico = [];
+            animando = false;
+            nomeSorteado.className = 'placeholder';
+            nomeSorteado.textContent = 'Clique em sortear';
+            
+            atualizarInterface();
+        }
+        
+        // Atualiza a interface
+        function atualizarInterface() {
+            // Atualiza o título da equipe
+            tituloEquipe.textContent = `${nomesEquipes[equipeAtual]} - Sorteio`;
+            
+            // Atualiza status do sorteio
+            statusSorteio.textContent = nomes.length === 0
+                ? "Todos os nomes foram sorteados!"
+                : `${nomes.length} nome(s) disponíveis para sorteio`;
+                
+            // Atualiza botão de sorteio
+            btnSortear.className = `botao ${coresBotoesEquipes[equipeAtual]}`;
+            btnSortear.disabled = animando || nomes.length === 0;
+            
+            // Atualiza nomes disponíveis
+            nomesDisponiveis.innerHTML = '';
+            if (nomes.length === 0) {
+                const alerta = document.createElement('div');
+                alerta.className = 'alerta';
+                alerta.textContent = 'Todos os nomes foram sorteados. Clique em "Resetar" para começar novamente.';
+                nomesDisponiveis.appendChild(alerta);
+            } else {
+                nomes.forEach(nome => {
+                    const badge = document.createElement('span');
+                    badge.className = `badge ${coresEquipes[equipeAtual]}`;
+                    badge.textContent = nome;
+                    nomesDisponiveis.appendChild(badge);
+                });
+            }
+            
+            // Atualiza status do histórico
+            statusHistorico.textContent = historico.length === 0
+                ? "Nenhum sorteio realizado"
+                : `${historico.length} nome(s) já sorteados`;
+                
+            // Atualiza lista de histórico
+            listaHistorico.innerHTML = '';
+            if (historico.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder';
+                placeholder.textContent = 'O histórico de sorteios aparecerá aqui';
+                listaHistorico.appendChild(placeholder);
+            } else {
+                historico.forEach((nome, index) => {
+                    const item = document.createElement('li');
+                    item.textContent = nome;
+                    listaHistorico.appendChild(item);
+                });
+            }
+        }
+        
+        // Inicializa o sorteador quando a página carrega
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>
